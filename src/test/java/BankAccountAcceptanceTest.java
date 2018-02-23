@@ -1,0 +1,49 @@
+import com.codurance.kata.bankaccountmockist.BankAccount;
+import com.codurance.kata.bankaccountmockist.Clock;
+import com.codurance.kata.bankaccountmockist.Output;
+import com.codurance.kata.bankaccountmockist.Statement;
+import com.codurance.kata.bankaccountmockist.TransactionFormatter;
+import com.codurance.kata.bankaccountmockist.TransactionRepository;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+
+import java.time.LocalDateTime;
+
+import static java.time.LocalDateTime.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@RunWith(MockitoJUnitRunner.class)
+public class BankAccountAcceptanceTest {
+    @Mock
+    private Output output;
+
+    @Mock
+    private Clock clock;
+
+    @Test
+    public void
+    should_print_a_statement_after_some_transactions() {
+        TransactionRepository transactionRepository = new TransactionRepository();
+        TransactionFormatter formatter = new TransactionFormatter();
+        Statement statement = new Statement(output, formatter);
+        BankAccount bankAccount = new BankAccount(transactionRepository, clock, statement);
+
+        when(clock.currentTime()).thenReturn(of(2012, 1, 10, 0, 0))
+                .thenReturn(of(2012, 1, 13, 0, 0))
+                .thenReturn(of(2012, 1, 14, 0, 0));
+
+        bankAccount.deposit(1000);
+        bankAccount.deposit(2000);
+        bankAccount.withdraw(500);
+
+        bankAccount.statement();
+
+        verify(output).print("date || credit || debit || balance\n" +
+                "14/01/2012 || 500.00 || || 2500.00\n" +
+                "13/01/2012 || || 2000.00 || 3000.00\n" +
+                "10/01/2012 || || 1000.00 || 1000.00");
+    }
+}
